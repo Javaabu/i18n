@@ -1,0 +1,25 @@
+body {
+  font:
+    16px/1.6 system-ui,
+    "MV Faseyha",
+    sans-serif;
+  max-width: 32rem;
+  margin: 3rem auto;
+  padding-inline: 1rem;
+}
+
+label,
+input {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+input {
+  padding: 0.5rem;
+  margin-block: 0.25rem 1rem;
+}
+
+nav {
+  margin-block-end: 2rem;
+}

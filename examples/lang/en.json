@@ -1,0 +1,8 @@
+{
+  "Message": "Message",
+  "Welcome, :name!": "Welcome, :name!",
+  "Switch language": "ދިވެހި",
+  "messages": {
+    "unread": "{0} No new messages|{1} One new message|[2,*] :count new messages"
+  }
+}

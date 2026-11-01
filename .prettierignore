@@ -1,0 +1,7 @@
+dist
+coverage
+pnpm-lock.yaml
+CHANGELOG.md
+test/parity/vendor
+examples/dist
+test/parity/golden.json

@@ -1,0 +1,39 @@
+# @javaabu/i18n
+
+> Laravel's __(), trans() and trans_choice() for JavaScript, with the same arguments and output. Works with React, Vue 3, jQuery and vanilla JS. Detects the locale from the page, knows RTL, and loads Laravel JS Localization, JSON, gettext, XLIFF, properties and ARB translations.
+
+Paths are relative to this file. In a project, that's node_modules/@javaabu/i18n/.
+
+## Rules
+
+- Never hard-code user-facing text. Use `__('Save')` with the English text as the key, or a group key like `messages.welcome`.
+- Pass values as placeholders, `__('Hello, :name', { name })`, never by joining strings.
+- In React, use `useTranslation()` from `@javaabu/i18n/react`, so components re-render on a locale change. In Vue templates, use `__()` directly after `app.use(i18n)` from `@javaabu/i18n/vue`; in `<script setup>`, use `useTranslation()` from the same place.
+- Don't add other translation libraries or a custom `t()` helper.
+- The locale comes from `<html lang>`. Only call `setLocale()` for a language switcher.
+- JSON lines don't fall back; language file lines do. This matches Laravel.
+- In Dhivehi, `trans_choice('one|many', 5)` returns `one`, because Laravel has no plural rule for `dv`. Write ranges for Dhivehi lines: `{1} …|[2,*] …`.
+- The result isn't escaped. Escape anything you insert before using it as HTML.
+
+## Docs
+
+- [Introduction](docs/intro.md): what the package does
+- [Requirements](docs/requirements.md): versions and bundlers
+- [Installation & Setup](docs/installation-and-setup.md): installing, the script tag, examples
+- [Translating text](docs/basic-usage/translating.md): __(), trans(), lookups, replacements, missing keys
+- [Pluralization](docs/basic-usage/pluralization.md): trans_choice(), ranges, Dhivehi plurals
+- [Locale and direction](docs/basic-usage/locale-and-direction.md): detection, fallback, switching, RTL
+- [Loading translations](docs/basic-usage/loading-translations.md): window.Lang, URLs, bundled files, server data
+- [File formats](docs/basic-usage/file-formats.md): every accepted shape and format, custom formats
+- [React](docs/frameworks/react.md): useTranslation(), Inertia, server rendering
+- [Vue](docs/frameworks/vue.md): the plugin, templates, useTranslation()
+- [jQuery](docs/frameworks/jquery.md): $.__(), $(el).translate()
+- [Vanilla JS](docs/frameworks/vanilla-js.md): globals, data-trans attributes
+- [API reference](docs/api-reference.md): every function, option and entry point
+- [Differences from Laravel](docs/differences-from-laravel.md): what's added or left out
+- [Migrating from js-utilities](docs/migrating-from-js-utilities.md): replacing the lang module and Lang.js
+- [AI assistants](docs/ai-assistants.md): Laravel Boost, and using these docs from other assistants
+- [Questions and Security](docs/questions-and-security.md): where to get help
+- [Changelog](docs/changelog.md): where changes are listed
+- [About Us](docs/about-us.md): Javaabu
+- [Contributing to the docs](docs/contributing-to-docs.md): how the docs are built

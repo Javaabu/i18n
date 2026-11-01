@@ -1,0 +1,30 @@
+<!doctype html>
+<!-- No build step and no server: run `pnpm build`, then open this file. From a site, use
+     https://unpkg.com/@javaabu/i18n/dist/i18n.iife.js instead of the local path. -->
+<html lang="dv" dir="rtl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Script tag - @javaabu/i18n</title>
+    <link rel="stylesheet" href="./style.css" />
+    <script src="../dist/i18n.iife.js"></script>
+    <script>
+      // The same shape `php artisan lang:js --json` writes, so a lang:js file works here unchanged.
+      I18n.load({
+        "dv.strings": { "Welcome, :name!": "މަރުޙަބާ، :name!", Message: "މެސެޖު" },
+        "dv.messages": { unread: "{0} އައު މެސެޖެއް ނެތް|{1} އައު މެސެޖެއް|[2,*] :count އައު މެސެޖު" },
+      })
+    </script>
+  </head>
+  <body>
+    <h1 id="welcome"></h1>
+    <p id="unread"></p>
+    <label for="message" data-trans="Message"></label>
+    <input id="message" name="message" data-trans-attr-placeholder="Message" />
+    <script>
+      document.getElementById("welcome").textContent = __("Welcome, :name!", { name: "ޢަލީ" })
+      document.getElementById("unread").textContent = trans_choice("messages.unread", 3)
+      I18n.translatePage()
+    </script>
+  </body>
+</html>

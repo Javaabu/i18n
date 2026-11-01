@@ -1,0 +1,5 @@
+{
+  "name": "i18n",
+  "description": "Laravel's __(), trans() and trans_choice() for JavaScript, with React, Vue, jQuery and vanilla JS support",
+  "version": "0"
+}

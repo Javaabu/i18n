@@ -1,0 +1,8 @@
+{
+  "Message": "މެސެޖު",
+  "Welcome, :name!": "މަރުޙަބާ، :name!",
+  "Switch language": "English",
+  "messages": {
+    "unread": "{0} އައު މެސެޖެއް ނެތް|{1} އައު މެސެޖެއް|[2,*] :count އައު މެސެޖު"
+  }
+}

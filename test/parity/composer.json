@@ -1,0 +1,7 @@
+{
+  "description": "Generates golden.json from the real Laravel translator. Only needed to refresh the parity fixture.",
+  "require": {
+    "php": "^8.2",
+    "illuminate/translation": "^12.0"
+  }
+}

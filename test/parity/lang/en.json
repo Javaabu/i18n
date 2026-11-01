@@ -1,0 +1,8 @@
+{
+  "Hello": "Hi there",
+  "Welcome, :name!": "Hey, :name!",
+  "Only in English JSON.": "English only line.",
+  "Empty line": "",
+  ":count items": ":count things",
+  "There is one apple|There are many apples": "One apple|Many apples"
+}

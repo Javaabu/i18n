@@ -1,0 +1,11 @@
+{
+  "position": 1.31,
+  "label": "Frameworks",
+  "collapsible": true,
+  "collapsed": false,
+  "link": {
+    "type": "generated-index",
+    "slug": "/i18n/_categories/frameworks",
+    "description": "Using the package with React, Vue, jQuery and vanilla JS"
+  }
+}

@@ -1,0 +1,49 @@
+name: Release
+
+# Publishes to npm when a version tag (v0.1.0, …) is pushed for a commit on main. Version first, on a branch:
+#
+#   pnpm changeset version
+#   git commit -am "Release v0.1.0" && merge into main
+#   git tag v0.1.0 <main commit> && git push origin v0.1.0
+#
+# Uses npm trusted publishing, so no npm token is stored in the repo.
+
+on:
+  push:
+    tags: ["v*"]
+
+concurrency: release
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - name: Check the tag is on main and matches package.json
+        run: |
+          git fetch origin main
+          if ! git merge-base --is-ancestor "$GITHUB_SHA" origin/main; then
+            echo "::error::$GITHUB_REF_NAME points at a commit that is not on main."
+            exit 1
+          fi
+          version=$(node -p "require('./package.json').version")
+          if [ "${GITHUB_REF_NAME#v}" != "$version" ]; then
+            echo "::error::package.json is at $version, but the tag is $GITHUB_REF_NAME. Run pnpm changeset version first."
+            exit 1
+          fi
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24 # ships npm 11, which trusted publishing needs
+          cache: pnpm
+          registry-url: https://registry.npmjs.org
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+      - run: pnpm test:browser
+      - run: npm publish --access public
