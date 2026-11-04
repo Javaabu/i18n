@@ -79,6 +79,7 @@
   },
   "scripts": {
     "build": "vite build && vite build --config vite.browser.config.ts && tsc -p tsconfig.build.json",
+    "prepare": "pnpm build",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
