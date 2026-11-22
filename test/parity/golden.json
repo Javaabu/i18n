@@ -104,6 +104,8 @@
         "Many apples",
         "Untranslated many",
         "3 things",
+        " none ",
+        "\u2028some",
         "3 lots"
     ],
     "has": [
@@ -173,7 +175,8 @@
             "fallback_list": [
                 "English list"
             ],
-            "zero": "0"
+            "zero": "0",
+            "nbsp": "{0}  none |[1,*]\u2028some\t"
         },
         "dv.strings": {
             "Hello": "ހެލޯ",
@@ -218,7 +221,9 @@
         "second",
         "multi\nline",
         "[not a range]text",
-        ""
+        "",
+        " ސުމެއް ",
+        "　ގިނަ"
     ],
     "plural": {
         "numbers": [

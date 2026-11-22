@@ -80,6 +80,8 @@
     { "key": "There is one apple|There are many apples", "number": 3 },
     { "key": "Untranslated one|Untranslated many", "number": 3 },
     { "key": ":count items", "number": 3 },
+    { "key": "messages.nbsp", "number": 0 },
+    { "key": "messages.nbsp", "number": 2 },
     { "key": "{0} none|{1} :count one|[2,*] :count lots", "number": 3 }
   ],
   "has": [
@@ -127,6 +129,8 @@
     { "line": "{1}first|second|third", "number": 7, "locale": "en" },
     { "line": "{1}\nmulti\nline|[2,*]two", "number": 1, "locale": "en" },
     { "line": "[not a range]text|other", "number": 1, "locale": "en" },
-    { "line": "", "number": 1, "locale": "en" }
+    { "line": "", "number": 1, "locale": "en" },
+    { "line": "{0} \u00a0ސުމެއް\u00a0|[1,*]\u3000ގިނަ\u000b", "number": 0, "locale": "dv" },
+    { "line": "{0} \u00a0ސުމެއް\u00a0|[1,*]\u3000ގިނަ\u000b", "number": 3, "locale": "dv" }
   ]
 }

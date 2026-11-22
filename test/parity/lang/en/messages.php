@@ -30,4 +30,5 @@ return [
     ],
     'fallback_list' => ['English list'],
     'zero' => '0',
+    'nbsp' => "{0} \u{00A0}none\u{00A0}|[1,*]\u{2028}some\t",
 ];

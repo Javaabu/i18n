@@ -123,6 +123,11 @@ function extractFromString(part: string, number: number): string | null {
   return compare(number, condition) === 0 ? value : null
 }
 
+/** PHP's `trim()`: only space, tab, newlines, NUL and vertical tab, not NBSP and the rest of Unicode's whitespace. */
+function phpTrim(text: string): string {
+  return text.replace(/^[ \t\n\r\0\v]+|[ \t\n\r\0\v]+$/g, "")
+}
+
 /** `Illuminate\Translation\MessageSelector::choose()`. */
 export function chooseMessage(line: string, number: number, locale: string, pluralRule?: PluralRule): string {
   const segments = line.split("|")
@@ -130,7 +135,7 @@ export function chooseMessage(line: string, number: number, locale: string, plur
   for (const part of segments) {
     const value = extractFromString(part, number)
 
-    if (value !== null) return value.trim()
+    if (value !== null) return phpTrim(value)
   }
 
   const stripped = segments.map((part) => part.replace(/^[{[][-?\d|*,.*]*[}\]]/, ""))
