@@ -1,6 +1,10 @@
-/** Laravel spells locales `en_GB`; `<html lang>` spells them `en-GB`. Both end up as `en_GB`. */
+/**
+ * Laravel spells locales `en_GB`; `<html lang>` spells them `en-GB`. Both end up as `en_GB`. Of a list like
+ * `content-language` or `Accept-Language` (`dv, en;q=0.9`), the first locale is taken.
+ */
 export function normalizeLocale(locale: string): string {
-  const [language = "", ...rest] = locale.trim().split(/[-_]/)
+  const first = locale.split(",").find((entry) => entry.trim() !== "") ?? ""
+  const [language = "", ...rest] = (first.split(";")[0] as string).trim().split(/[-_]/)
   const parts = rest.map((part) => {
     if (/^[a-z]{2}$/i.test(part)) return part.toUpperCase()
     if (/^[a-z]{4}$/i.test(part)) return part.charAt(0).toUpperCase() + part.slice(1).toLowerCase()
@@ -10,11 +14,11 @@ export function normalizeLocale(locale: string): string {
   return [language.toLowerCase(), ...parts].join("_")
 }
 
-/** `en_GB` then `en`, so `<html lang="dv-MV">` finds lines loaded for `dv`. */
+/** `zh_Hant_TW`, `zh_Hant`, then `zh`, so `<html lang="dv-MV">` finds lines loaded for `dv`. */
 export function localeChain(locale: string): string[] {
-  const language = locale.split("_")[0] as string
+  const parts = locale.split("_")
 
-  return language === locale ? [locale] : [locale, language]
+  return parts.map((_, index) => parts.slice(0, parts.length - index).join("_"))
 }
 
 function metaContent(selector: string): string | undefined {
@@ -34,7 +38,9 @@ export function detectLocale(): string | undefined {
     (document.documentElement?.getAttribute("lang")?.trim() || undefined) ??
     metaContent('meta[property="og:locale"]')
 
-  return locale ? normalizeLocale(locale) : undefined
+  const normalized = locale && normalizeLocale(locale)
+
+  return normalized || undefined
 }
 
 /** `<meta name="fallback-locale">`, for pages that want to pass on Laravel's `app.fallback_locale`. */

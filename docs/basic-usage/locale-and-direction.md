@@ -13,7 +13,7 @@ Without a `locale` option, the first of these wins:
 4. `<meta property="og:locale" content="dv">`
 5. `en`
 
-`en-GB` and `en_GB` are the same locale. Detection runs the first time it's needed, so the tags can come after the script.
+`en-GB` and `en_GB` are the same locale. Of a list, such as `content="dv, en"`, the first locale is used. `zh-Hant-TW` finds lines loaded for `zh_Hant_TW`, then `zh_Hant`, then `zh`. Detection runs the first time it's needed, so the tags can come after the script.
 
 # Fallback locale
 

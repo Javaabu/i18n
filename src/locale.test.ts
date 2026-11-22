@@ -1,4 +1,4 @@
-import { detectFallbackLocale, detectLocale, isRtlLocale, normalizeLocale } from "./locale"
+import { detectFallbackLocale, detectLocale, isRtlLocale, localeChain, normalizeLocale } from "./locale"
 import { Translator } from "./translator"
 
 afterEach(() => {
@@ -15,8 +15,22 @@ describe("normalizeLocale", () => {
     ["pt-br", "pt_BR"],
     ["zh-hant-tw", "zh_Hant_TW"],
     ["es-419", "es_419"],
+    ["dv, en", "dv"],
+    ["en-US,en;q=0.9", "en_US"],
+    ["dv-MV;q=0.8", "dv_MV"],
+    [" , dv", "dv"],
   ])("%s becomes %s", (input, expected) => {
     expect(normalizeLocale(input)).toBe(expected)
+  })
+})
+
+describe("localeChain", () => {
+  it.each([
+    ["dv", ["dv"]],
+    ["dv_MV", ["dv_MV", "dv"]],
+    ["zh_Hant_TW", ["zh_Hant_TW", "zh_Hant", "zh"]],
+  ])("%s looks in %j", (locale, expected) => {
+    expect(localeChain(locale)).toEqual(expected)
   })
 })
 
@@ -43,6 +57,12 @@ describe("detectLocale", () => {
     document.head.insertAdjacentHTML("beforeend", '<meta name="locale" content="dv">')
 
     expect(detectLocale()).toBe("dv")
+  })
+
+  it("takes the first locale of a content-language list", () => {
+    document.head.innerHTML = '<meta http-equiv="content-language" content="dv-MV, en">'
+
+    expect(detectLocale()).toBe("dv_MV")
   })
 
   it("falls back on og:locale", () => {
@@ -85,6 +105,15 @@ describe("Translator", () => {
 
     expect(t.getLocale()).toBe("dv")
     expect(new Translator({ locale: "en" }).getFallback()).toBe("en")
+  })
+
+  it("finds lines for the script from a locale with a script and region", () => {
+    document.documentElement.lang = "zh-Hant-TW"
+
+    const t = new Translator({ fallback: null, messages: { zh_Hant: { Hi: "你好" }, zh: { messages: { hi: "嗨" } } } })
+
+    expect(t.__("Hi")).toBe("你好")
+    expect(t.__("messages.hi")).toBe("嗨")
   })
 
   it("doesn't need a document", () => {
