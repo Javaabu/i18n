@@ -29,4 +29,5 @@ return [
         'items' => [':name first', ':Name second'],
     ],
     'fallback_list' => ['English list'],
+    'zero' => '0',
 ];

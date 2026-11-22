@@ -45,7 +45,10 @@
     { "key": "messages.days.01" },
     { "key": "messages.listed", "replace": { "name": "ali" } },
     { "key": "messages.listed.items.1", "replace": { "name": "ali" } },
-    { "key": "messages.fallback_list", "current": "dv" }
+    { "key": "messages.fallback_list", "current": "dv" },
+    { "key": "Zero line" },
+    { "key": "Zero, :name", "replace": { "name": "Ali" } },
+    { "key": "messages.zero" }
   ],
   "choice": [
     { "key": "messages.apples", "number": 1 },
@@ -91,6 +94,7 @@
     { "key": "messages.nested" },
     { "key": "messages.days", "current": "dv" },
     { "key": "messages.days.0", "current": "dv" },
+    { "key": "Zero line" },
     { "key": "Nope" }
   ],
   "noFallback": [

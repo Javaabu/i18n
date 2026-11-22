@@ -377,7 +377,8 @@ export class Translator {
       missingKey = this.handleMissingKey(key, replace, target, fallback)
     }
 
-    return makeReplacements(line || missingKey, replace)
+    // `$line ?: $key`: in PHP, "0" is as falsy as "".
+    return makeReplacements(line !== undefined && line !== "" && line !== "0" ? line : missingKey, replace)
   }
 
   /** `Translator::choice()`. */

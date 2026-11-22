@@ -69,7 +69,10 @@
         "Ali second",
         [
             "English list"
-        ]
+        ],
+        "Zero line",
+        "Zero, Ali",
+        "0"
     ],
     "choice": [
         "There is one apple",
@@ -115,6 +118,7 @@
         true,
         true,
         true,
+        true,
         false
     ],
     "noFallback": [
@@ -128,7 +132,9 @@
             "Only in English JSON.": "English only line.",
             "Empty line": "",
             ":count items": ":count things",
-            "There is one apple|There are many apples": "One apple|Many apples"
+            "There is one apple|There are many apples": "One apple|Many apples",
+            "Zero line": "0",
+            "Zero, :name": "0"
         },
         "en.messages": {
             "welcome": "Welcome, :name",
@@ -166,7 +172,8 @@
             },
             "fallback_list": [
                 "English list"
-            ]
+            ],
+            "zero": "0"
         },
         "dv.strings": {
             "Hello": "ހެލޯ",

@@ -4,5 +4,7 @@
   "Only in English JSON.": "English only line.",
   "Empty line": "",
   ":count items": ":count things",
-  "There is one apple|There are many apples": "One apple|Many apples"
+  "There is one apple|There are many apples": "One apple|Many apples",
+  "Zero line": "0",
+  "Zero, :name": "0"
 }

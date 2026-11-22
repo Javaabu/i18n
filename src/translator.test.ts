@@ -127,6 +127,17 @@ describe("message shapes", () => {
     expect(t.get("group.list.0.a")).toBe("A")
   })
 
+  it('returns the key for a JSON line of "0", as PHP\'s ?: does, but keeps "0" in a group', () => {
+    const t = new Translator({ locale: "dv", fallback: null })
+
+    t.load({ zero: "0", ސުމެއް: "0", m: { zero: "0" } }, { locale: "dv" })
+
+    expect(t.get("zero")).toBe("zero")
+    expect(t.get("ސުމެއް")).toBe("ސުމެއް")
+    expect(t.get("m.zero")).toBe("0")
+    expect(t.has("zero")).toBe(true)
+  })
+
   it("can translate keys named after Object.prototype members", () => {
     const t = new Translator({ locale: "en", messages: { en: { constructor: "Builder" } } })
 
