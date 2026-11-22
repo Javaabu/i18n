@@ -372,6 +372,73 @@ describe("loader", () => {
     errors.mockRestore()
   })
 
+  it("treats a locale or fallback from configure() like setLocale() and setFallback()", async () => {
+    const loader = vi.fn((locale: string) => ({ hi: `ހައި ${locale}` }))
+    const t = new Translator({ locale: "en", fallback: null, loader })
+
+    await t.ready()
+
+    const listener = vi.fn()
+
+    t.subscribe(listener)
+    t.configure({ locale: "dv" })
+    await t.ready()
+
+    expect(loader.mock.calls.map(([locale]) => locale)).toEqual(["en", "dv"])
+    expect(listener).toHaveBeenCalled()
+    expect(t.get("hi")).toBe("ހައި dv")
+
+    listener.mockClear()
+    t.configure({ fallback: "ar" })
+    await t.ready()
+
+    expect(loader.mock.calls.map(([locale]) => locale)).toEqual(["en", "dv", "ar"])
+    expect(listener).toHaveBeenCalled()
+
+    listener.mockClear()
+    t.configure({ locale: "dv", fallback: "ar" })
+
+    expect(listener).not.toHaveBeenCalled()
+  })
+
+  it("asks a new loader even while the old one is still fetching, and drops what the old one brings", async () => {
+    let resolveOld: (value: object) => void = () => {}
+    const t = new Translator({
+      locale: "dv",
+      fallback: null,
+      loader: () => new Promise((resolve) => (resolveOld = resolve)),
+    })
+    const loader = vi.fn(() => ({ hi: "އައު" }))
+
+    t.configure({ loader })
+    resolveOld({ hi: "ބާ", old: "ބާ" })
+    await t.ready()
+    await Promise.resolve()
+
+    expect(loader).toHaveBeenCalledWith("dv")
+    expect(t.get("hi")).toBe("އައު")
+    expect(t.get("old")).toBe("old")
+  })
+
+  it("doesn't report failures of a loader that has been replaced", async () => {
+    const errors = vi.spyOn(console, "error").mockImplementation(() => {})
+    let rejectOld: (error: Error) => void = () => {}
+    const t = new Translator({
+      locale: "dv",
+      fallback: null,
+      loader: () => new Promise((_, reject) => (rejectOld = reject)),
+    })
+
+    t.configure({ loader: () => ({ hi: "ހައި" }) })
+    rejectOld(new Error("offline"))
+
+    await expect(t.ready()).resolves.toBeUndefined()
+    await new Promise((resolve) => setTimeout(resolve))
+    expect(errors).not.toHaveBeenCalled()
+
+    errors.mockRestore()
+  })
+
   it("can retry a locale after a failure", async () => {
     const errors = vi.spyOn(console, "error").mockImplementation(() => {})
     const loader = vi

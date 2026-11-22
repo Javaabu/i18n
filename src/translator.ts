@@ -184,6 +184,8 @@ export class Translator {
   private locale?: string
   private fallback?: string | null
   private loader?: Loader
+  /** Goes up when the loader is replaced, so requests to the old one are ignored when they land. */
+  private loaderGeneration = 0
   private format?: string
   private missingKeyHandler?: MissingKeyHandler
   private handlingMissingKeys = true
@@ -195,9 +197,31 @@ export class Translator {
     this.configure(options)
   }
 
+  /** Changes any of the options. A new locale or fallback works like `setLocale()` and `setFallback()`. */
   configure(options: TranslatorOptions): this {
-    if (options.locale) this.locale = normalizeLocale(options.locale)
-    if (options.fallback !== undefined) this.fallback = options.fallback && normalizeLocale(options.fallback)
+    const toFetch: string[] = []
+    let changed = false
+
+    if (options.locale) {
+      const locale = normalizeLocale(options.locale)
+
+      if (locale !== this.locale) {
+        this.locale = locale
+        toFetch.push(locale)
+        changed = true
+      }
+    }
+
+    if (options.fallback !== undefined) {
+      const fallback = options.fallback && normalizeLocale(options.fallback)
+
+      if (fallback !== this.fallback) {
+        this.fallback = fallback
+        if (fallback) toFetch.push(fallback)
+        changed = true
+      }
+    }
+
     if (options.format) this.format = options.format
 
     for (const [locale, rule] of Object.entries(options.pluralRules ?? {})) {
@@ -207,14 +231,21 @@ export class Translator {
     if (options.messages !== undefined) this.load(options.messages)
 
     if (options.loader) {
+      // Requests to the old loader may still land; `fetchLocale()` drops what they bring.
       this.loader = options.loader
+      this.loaderGeneration++
       this.loaded.clear()
-      this.fetchLocale(this.getLocale())
+      this.pending.clear()
+      toFetch.push(this.getLocale())
 
       const fallback = this.getFallback()
 
-      if (fallback) this.fetchLocale(fallback)
+      if (fallback) toFetch.push(fallback)
     }
+
+    for (const locale of toFetch) this.fetchLocale(locale)
+
+    if (changed) this.notify()
 
     return this
   }
@@ -511,12 +542,18 @@ export class Translator {
 
     if (this.loaded.has(id) || this.pending.has(id)) return
 
-    const request = this.request(loader, locale, perLocale)
+    const generation = this.loaderGeneration
+    const isCurrent = () => generation === this.loaderGeneration
+    const request = this.request(loader, locale, perLocale, isCurrent)
       .then(() => {
+        if (!isCurrent()) return
+
         this.loaded.add(id)
         this.pending.delete(id)
       })
       .catch((error: unknown) => {
+        if (!isCurrent()) return
+
         this.pending.delete(id)
         console.error(`[@javaabu/i18n] Couldn't load translations for "${locale}".`, error)
 
@@ -528,13 +565,13 @@ export class Translator {
     this.pending.set(id, request)
   }
 
-  private async request(loader: Loader, locale: string, perLocale: boolean): Promise<void> {
+  private async request(loader: Loader, locale: string, perLocale: boolean, isCurrent: () => boolean): Promise<void> {
     const options: LoadOptions = perLocale ? { locale } : {}
 
     if (typeof loader === "function") {
       const data = await loader(locale)
 
-      if (data !== undefined && data !== null) this.load(data, { ...options, format: this.format })
+      if (isCurrent() && data !== undefined && data !== null) this.load(data, { ...options, format: this.format })
 
       return
     }
@@ -549,7 +586,9 @@ export class Translator {
       throw new Error(`${url} responded with ${response.status}.`)
     }
 
-    this.load(await response.text(), { ...options, format: this.format ?? formatFromPath(url) })
+    const text = await response.text()
+
+    if (isCurrent()) this.load(text, { ...options, format: this.format ?? formatFromPath(url) })
   }
 
   private notify(): void {

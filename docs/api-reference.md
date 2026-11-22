@@ -18,7 +18,7 @@ sidebar_position: 1.32
 
 | Function                                         | What it does                                                   |
 | ------------------------------------------------ | -------------------------------------------------------------- |
-| `configure(options)`                             | Sets the options below on the shared translator                |
+| `configure(options)`                             | Sets the options below on the shared translator; see below     |
 | `load(input, { locale?, format? })`              | Adds lines from an object or the text of a file                |
 | `ready()`                                        | Resolves when in-flight loads finish; rejects if one fails     |
 | `subscribe(listener)`                            | Runs on locale and line changes. Returns a function to stop    |
@@ -32,6 +32,8 @@ sidebar_position: 1.32
 | `createTranslator(options?)`                     | A separate translator, for server rendering                    |
 
 # Options
+
+`configure()` can be called again at any time. A new `locale` or `fallback` works like `setLocale()` and `setFallback()`: subscribers hear about it and the loader fetches it. A new `loader` fetches the current and fallback locales again, and anything the old loader is still fetching is ignored when it arrives.
 
 | Option        | Default                               | What it does                                                             |
 | ------------- | ------------------------------------- | ------------------------------------------------------------------------ |
