@@ -42,7 +42,34 @@
         },
         "Value a and b",
         "Line in a nested file",
-        "Line in a nested file"
+        "Line in a nested file",
+        [
+            "Sunday",
+            "Monday, :name"
+        ],
+        [
+            "އާދީއްތަ",
+            "ހޯމަ، :name"
+        ],
+        [
+            "އާދީއްތަ",
+            "ހޯމަ، އަލީ"
+        ],
+        "އާދީއްތަ",
+        "ހޯމަ، އަލީ",
+        "messages.days.5",
+        "messages.days.length",
+        "messages.days.01",
+        {
+            "items": [
+                "ali first",
+                "Ali second"
+            ]
+        },
+        "Ali second",
+        [
+            "English list"
+        ]
     ],
     "choice": [
         "There is one apple",
@@ -86,6 +113,8 @@
         false,
         false,
         true,
+        true,
+        true,
         false
     ],
     "noFallback": [
@@ -124,7 +153,20 @@
             "spaced": "{1}   padded   |[2,*]   more   ",
             "three": "one|few|many",
             "multiline": "{0} none\nsecond line|[1,*] some\nsecond line",
-            "number_key": "Value :0 and :1"
+            "number_key": "Value :0 and :1",
+            "days": [
+                "Sunday",
+                "Monday, :name"
+            ],
+            "listed": {
+                "items": [
+                    ":name first",
+                    ":Name second"
+                ]
+            },
+            "fallback_list": [
+                "English list"
+            ]
         },
         "dv.strings": {
             "Hello": "ހެލޯ",
@@ -132,7 +174,12 @@
         },
         "dv.messages": {
             "welcome": "މަރުޙަބާ، :name",
-            "apples": "އެއް އާފަލު|ގިނަ އާފަލު"
+            "apples": "އެއް އާފަލު|ގިނަ އާފަލު",
+            "days": [
+                "އާދީއްތަ",
+                "ހޯމަ، :name"
+            ],
+            "fallback_list": []
         },
         "en.dir.sub": {
             "line": "Line in a nested file"

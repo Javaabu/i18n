@@ -36,7 +36,7 @@ In React, use the hook rather than the imported `__`, or components won't re-ren
 - JSON lines don't fall back: a key that's only in `en.json` returns the key in `dv`. Language file lines do fall back.
 - **`trans_choice('one|many', 5)` returns `one` in Dhivehi**, because Laravel has no plural rule for `dv`. For Dhivehi lines, write ranges, `{1} …|[2,*] …`, which work on the server too.
 - Don't add `pluralRules` for `dv` unless the server has the same rule, or the two will disagree.
-- `__()` returns a string in TypeScript. Use `__<Messages>('group')` when a key returns a whole group.
+- `__()` returns a string in TypeScript. Use `__<Messages>('group')` when a key returns a whole group, and `__<string[]>('messages.days')` for a list (a PHP list in a language file). List items are read by index: `__('messages.days.0')`.
 
 ## RTL
 

@@ -8,8 +8,11 @@ export type MessageValue = string | number | boolean | null | Messages | Message
 /** Placeholder values. A function handles a `<tag>…</tag>` pair, as a Closure does in Laravel. */
 export type Replacements = Record<string, unknown> | unknown[]
 
-/** What a translation can be: a line, or a whole group when the key points at one (`__<Messages>("messages")`). */
-export type Translation = string | Messages
+/**
+ * What a translation can be: a line, or a whole group or list when the key points at one (`__<Messages>("messages")`,
+ * `__<string[]>("messages.days")`).
+ */
+export type Translation = string | Messages | MessageValue[]
 
 /** Anything `trans_choice()` accepts as a number; collections are counted, as Countable is in Laravel. */
 export type Countable = number | unknown[] | Set<unknown> | Map<unknown, unknown> | { length: number }

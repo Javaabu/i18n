@@ -83,6 +83,50 @@ describe("message shapes", () => {
     expect(t.__("group.constructor.name")).toBe("group.constructor.name")
   })
 
+  it("returns lists from language files and reads their items by index", () => {
+    const t = new Translator({ locale: "dv", fallback: null })
+
+    t.load({ messages: { days: ["އާދީއްތަ", "ހޯމަ"], nested: { list: [":name ދުވަސް"] } } }, { locale: "dv" })
+
+    expect(t.get("messages.days")).toEqual(["އާދީއްތަ", "ހޯމަ"])
+    expect(t.get("messages.days.0")).toBe("އާދީއްތަ")
+    expect(t.get("messages.days.length")).toBe("messages.days.length")
+    expect(t.get("messages.nested", { name: "އަލީ" })).toEqual({ list: ["އަލީ ދުވަސް"] })
+    expect(t.get("messages.nested.list.0")).toBe(":name ދުވަސް")
+    expect(t.has("messages.days")).toBe(true)
+  })
+
+  it("falls back past an empty list", () => {
+    const t = new Translator({
+      locale: "dv",
+      fallback: "en",
+      messages: { dv: { m: { days: [] } }, en: { m: { days: ["Sunday"] } } },
+    })
+
+    expect(t.get("m.days")).toEqual(["Sunday"])
+  })
+
+  it("reads a language file that is a list, in the Laravel JS Localization shape", () => {
+    const t = new Translator({ locale: "dv", messages: { "dv.days": ["އާދީއްތަ"], "dv.messages": { hi: "ހައި" } } })
+
+    expect(t.get("days.0")).toBe("އާދީއްތަ")
+    expect(t.get("messages.hi")).toBe("ހައި")
+  })
+
+  it("keeps its own copy of loaded lists and groups", () => {
+    const days = ["އާދީއްތަ"]
+    const group = { list: [{ a: "A" }] }
+    const t = new Translator({ locale: "dv", fallback: null })
+
+    t.load({ days, group }, { locale: "dv" })
+    days[0] = "changed"
+    ;(group.list[0] as { a: string }).a = "changed"
+    ;(t.get("days") as string[])[0] = "changed"
+
+    expect(t.get("days.0")).toBe("އާދީއްތަ")
+    expect(t.get("group.list.0.a")).toBe("A")
+  })
+
   it("can translate keys named after Object.prototype members", () => {
     const t = new Translator({ locale: "en", messages: { en: { constructor: "Builder" } } })
 

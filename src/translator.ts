@@ -5,6 +5,7 @@ import type {
   Countable,
   Loader,
   LoadOptions,
+  MessageValue,
   Messages,
   MissingKeyHandler,
   PluralRule,
@@ -23,8 +24,28 @@ function isGroup(value: unknown): value is Messages {
   return typeof value === "object" && value !== null && !Array.isArray(value)
 }
 
-function own(node: Messages, key: string): Messages[string] | undefined {
+/** A group or a list: what PHP calls an array. */
+function isArray(value: unknown): value is Messages | MessageValue[] {
+  return typeof value === "object" && value !== null
+}
+
+/** A list only has its indexes, so `days.length` is as missing as it is in PHP. */
+function own(node: Messages | MessageValue[], key: string): MessageValue | undefined {
+  if (Array.isArray(node)) return /^(?:0|[1-9]\d*)$/.test(key) ? node[Number(key)] : undefined
+
   return Object.prototype.hasOwnProperty.call(node, key) ? node[key] : undefined
+}
+
+/** A copy, so the tree never shares objects or lists with what was passed to `load()`. */
+function cloneValue(value: MessageValue): MessageValue {
+  if (Array.isArray(value)) return value.map(cloneValue)
+  if (!isGroup(value)) return value
+
+  const group: Messages = {}
+
+  mergeInto(group, value)
+
+  return group
 }
 
 function mergeInto(target: Messages, source: Messages): void {
@@ -35,17 +56,14 @@ function mergeInto(target: Messages, source: Messages): void {
 
     if (isGroup(value) && isGroup(existing)) {
       mergeInto(existing, value)
-    } else if (isGroup(value)) {
-      target[key] = {}
-      mergeInto(target[key] as Messages, value)
     } else {
-      target[key] = value
+      target[key] = cloneValue(value)
     }
   }
 }
 
 /** `Arr::get()`, but a key may also contain literal dots at any depth (`en.dir.sub`, sentences as keys). */
-function dataGet(node: Messages, key: string): Messages[string] | undefined {
+function dataGet(node: Messages | MessageValue[], key: string): MessageValue | undefined {
   const exact = own(node, key)
 
   if (exact !== undefined) return exact
@@ -53,7 +71,7 @@ function dataGet(node: Messages, key: string): Messages[string] | undefined {
   for (let dot = key.indexOf("."); dot !== -1; dot = key.indexOf(".", dot + 1)) {
     const head = own(node, key.slice(0, dot))
 
-    if (isGroup(head)) {
+    if (isArray(head)) {
       const found = dataGet(head, key.slice(dot + 1))
 
       if (found !== undefined) return found
@@ -64,7 +82,7 @@ function dataGet(node: Messages, key: string): Messages[string] | undefined {
 }
 
 /** Like `dataGet()`, for language files: a top level string is a JSON line, not part of a group. */
-function groupGet(tree: Messages, key: string): Messages[string] | undefined {
+function groupGet(tree: Messages, key: string): MessageValue | undefined {
   const found = dataGet(tree, key)
 
   return typeof own(tree, key) === "string" ? undefined : found
@@ -119,16 +137,17 @@ export function makeReplacements(line: string, replace: Replacements): string {
   return line.replace(new RegExp(pattern.join("|"), "g"), (match) => shouldReplace.get(match) as string)
 }
 
-function replaceDeep(group: Messages, replace: Replacements): Messages {
+/** `array_walk_recursive()` with `makeReplacements()`, on a copy so the loaded lines stay as they are. */
+function replaceDeep<T extends MessageValue>(value: T, replace: Replacements): T {
+  if (typeof value === "string") return makeReplacements(value, replace) as T
+  if (Array.isArray(value)) return value.map((item) => replaceDeep(item, replace)) as T
+  if (!isGroup(value)) return value
+
   const result: Messages = {}
 
-  for (const [key, value] of Object.entries(group)) {
-    if (typeof value === "string") result[key] = makeReplacements(value, replace)
-    else if (isGroup(value)) result[key] = replaceDeep(value, replace)
-    else result[key] = value
-  }
+  for (const [key, item] of Object.entries(value)) result[key] = replaceDeep(item, replace)
 
-  return result
+  return result as T
 }
 
 function countOf(number: Countable): number {
@@ -351,7 +370,8 @@ export class Translator {
         const found = tree && groupGet(tree, path)
 
         if (typeof found === "string") return makeReplacements(found, replace)
-        if (isGroup(found) && Object.keys(found).length > 0) return replaceDeep(found, replace)
+        // An empty group or list falls through to the next locale, as `count($line) > 0` does.
+        if (isArray(found) && Object.keys(found).length > 0) return replaceDeep(found, replace)
       }
 
       missingKey = this.handleMissingKey(key, replace, target, fallback)
@@ -430,15 +450,17 @@ export class Translator {
 
   private loadShaped(data: Messages): void {
     const entries = Object.entries(data)
-    const shaped = (pattern: RegExp) => entries.length > 0 && entries.every(([k, v]) => pattern.test(k) && isGroup(v))
+    const shaped = (pattern: RegExp, value: (v: unknown) => boolean) =>
+      entries.length > 0 && entries.every(([k, v]) => pattern.test(k) && value(v))
 
-    if (shaped(PREFIXED_LOCALE)) {
+    // A language file can be a list, which `lang:js` writes as `"en.days": [ … ]`.
+    if (shaped(PREFIXED_LOCALE, isArray)) {
       for (const [key, value] of entries) {
         const [, locale, group] = PREFIXED_LOCALE.exec(key) as RegExpExecArray
 
         this.merge(locale as string, { [group as string]: value })
       }
-    } else if (shaped(BARE_LOCALE)) {
+    } else if (shaped(BARE_LOCALE, isGroup)) {
       for (const [locale, value] of entries) this.merge(locale, value as Messages)
     } else {
       this.merge(this.getLocale(), data)
@@ -460,7 +482,7 @@ export class Translator {
     for (const [key, value] of Object.entries(lines)) {
       if (key === "__proto__") continue
 
-      normalized[isGroup(value) ? key.replace(/\//g, ".") : key] = value
+      normalized[isArray(value) ? key.replace(/\//g, ".") : key] = value
     }
 
     mergeInto(tree, normalized)

@@ -24,4 +24,9 @@ return [
     'three' => 'one|few|many',
     'multiline' => "{0} none\nsecond line|[1,*] some\nsecond line",
     'number_key' => 'Value :0 and :1',
+    'days' => ['Sunday', 'Monday, :name'],
+    'listed' => [
+        'items' => [':name first', ':Name second'],
+    ],
+    'fallback_list' => ['English list'],
 ];

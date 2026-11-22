@@ -40,13 +40,18 @@ __("dir/file.line") // lang/en/dir/file.php
 __("package::file.line") // vendor packages
 ```
 
-A key that points at a group returns the whole group. TypeScript assumes a string, so say when you expect a group:
+A key that points at a group or a list returns all of it, with replacements made in every line. A list's items are read by index. TypeScript assumes a string, so say when you expect something else:
 
 ```ts
 import { __, type Messages } from "@javaabu/i18n"
 
+// lang/dv/messages.php: 'days' => ['އާދީއްތަ', 'ހޯމަ', …]
 const messages = __<Messages>("messages")
+const days = __<string[]>("messages.days") // ["އާދީއްތަ", "ހޯމަ", …]
+__("messages.days.1") // ހޯމަ
 ```
+
+An empty group or list counts as missing, so it falls back like a missing line.
 
 # Replacements
 

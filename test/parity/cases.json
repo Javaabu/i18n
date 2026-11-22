@@ -34,7 +34,18 @@
     { "key": "messages.nested" },
     { "key": "messages.number_key", "replace": ["a", "b"] },
     { "key": "dir/sub.line" },
-    { "key": "dir/sub.line", "current": "dv" }
+    { "key": "dir/sub.line", "current": "dv" },
+    { "key": "messages.days" },
+    { "key": "messages.days", "current": "dv" },
+    { "key": "messages.days", "replace": { "name": "އަލީ" }, "current": "dv" },
+    { "key": "messages.days.0", "current": "dv" },
+    { "key": "messages.days.1", "replace": { "name": "އަލީ" }, "current": "dv" },
+    { "key": "messages.days.5", "current": "dv" },
+    { "key": "messages.days.length" },
+    { "key": "messages.days.01" },
+    { "key": "messages.listed", "replace": { "name": "ali" } },
+    { "key": "messages.listed.items.1", "replace": { "name": "ali" } },
+    { "key": "messages.fallback_list", "current": "dv" }
   ],
   "choice": [
     { "key": "messages.apples", "number": 1 },
@@ -78,6 +89,8 @@
     { "key": "messages.only_english", "locale": "dv", "fallback": false },
     { "key": "messages.nope" },
     { "key": "messages.nested" },
+    { "key": "messages.days", "current": "dv" },
+    { "key": "messages.days.0", "current": "dv" },
     { "key": "Nope" }
   ],
   "noFallback": [
