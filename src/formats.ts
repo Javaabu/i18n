@@ -62,47 +62,70 @@ function unescapePo(text: string): string {
 function parsePo(text: string): ParsedFile {
   const messages: Messages = {}
   let locale: string | undefined
+  let fields: Record<string, string> = {}
+  let current: string | undefined
+  let fuzzy = false
 
-  for (const block of text.split(/\r?\n\s*\r?\n/)) {
-    const fields: Record<string, string> = {}
-    let current: string | undefined
-    let fuzzy = false
+  const hasMsgstr = () => Object.keys(fields).some((field) => field.startsWith("msgstr"))
 
-    for (const raw of block.split(/\r?\n/)) {
-      const line = raw.trim()
+  const finish = () => {
+    const entry = fields
+    const skip = fuzzy
 
-      if (line.startsWith("#")) {
-        if (/^#,.*\bfuzzy\b/.test(line)) fuzzy = true
-        continue
-      }
+    fields = {}
+    current = undefined
+    fuzzy = false
 
-      const start = /^(msgctxt|msgid_plural|msgid|msgstr(?:\[\d+\])?)\s+"(.*)"$/.exec(line)
-      const more = /^"(.*)"$/.exec(line)
+    if (entry.msgid === undefined) return
 
-      if (start) {
-        current = start[1] as string
-        fields[current] = unescapePo(start[2] as string)
-      } else if (more && current) {
-        fields[current] += unescapePo(more[1] as string)
-      }
+    if (entry.msgid === "") {
+      // `[ \t]*`, not `\s*`: an empty `Language:` mustn't run on into the next header.
+      locale = /^Language:[ \t]*(\S*)/m.exec(entry.msgstr ?? "")?.[1] || undefined
+      return
     }
 
-    if (fields.msgid === undefined) continue
+    const forms = Object.keys(entry)
+      .filter((field) => field.startsWith("msgstr"))
+      .sort((a, b) => a.localeCompare(b, undefined, { numeric: true }))
+      .map((field) => entry[field] as string)
 
-    if (fields.msgid === "") {
-      locale = /^Language:\s*(\S+)/m.exec(fields.msgstr ?? "")?.[1]
+    if (skip || forms.length === 0 || forms.some((form) => form === "")) return
+
+    define(messages, entry.msgctxt ? `${entry.msgctxt}.${entry.msgid}` : entry.msgid, forms.join("|"))
+  }
+
+  // Entries don't need blank lines between them: a comment, `msgctxt` or `msgid` after a `msgstr` starts the next one.
+  for (const raw of text.split(/\r?\n/)) {
+    const line = raw.trim()
+
+    if (line === "") {
+      finish()
       continue
     }
 
-    const forms = Object.keys(fields)
-      .filter((field) => field.startsWith("msgstr"))
-      .sort((a, b) => a.localeCompare(b, undefined, { numeric: true }))
-      .map((field) => fields[field] as string)
+    if (line.startsWith("#")) {
+      if (hasMsgstr()) finish()
+      if (/^#,.*\bfuzzy\b/.test(line)) fuzzy = true
+      current = undefined
+      continue
+    }
 
-    if (fuzzy || forms.length === 0 || forms.some((form) => form === "")) continue
+    const start = /^(msgctxt|msgid_plural|msgid|msgstr(?:\[\d+\])?)\s+"(.*)"$/.exec(line)
+    const more = /^"(.*)"$/.exec(line)
 
-    define(messages, fields.msgctxt ? `${fields.msgctxt}.${fields.msgid}` : fields.msgid, forms.join("|"))
+    if (start) {
+      const field = start[1] as string
+
+      if ((field === "msgctxt" || field === "msgid") && hasMsgstr()) finish()
+
+      current = field
+      fields[current] = unescapePo(start[2] as string)
+    } else if (more && current) {
+      fields[current] += unescapePo(more[1] as string)
+    }
   }
+
+  finish()
 
   return { locale, messages }
 }

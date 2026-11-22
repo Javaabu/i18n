@@ -86,6 +86,38 @@ msgstr ""
 
     expect(t.__("Hello")).toBe("ހެލޯ")
   })
+
+  it("leaves the locale unset when the Language header is empty", () => {
+    const template = 'msgid ""\nmsgstr ""\n"Language: \\n"\n"MIME-Version: 1.0\\n"\n\nmsgid "Hello"\nmsgstr "ހެލޯ"\n'
+
+    expect(parseFile(template, "po").locale).toBeUndefined()
+    expect(load(template).__("Hello")).toBe("ހެލޯ")
+  })
+
+  it("reads entries that aren't separated by blank lines", () => {
+    const { messages } = parseFile(
+      [
+        'msgid "A"',
+        'msgstr "އ"',
+        'msgid "B"',
+        'msgstr "ބ"',
+        "#, fuzzy",
+        'msgid "C"',
+        'msgstr "ޗ"',
+        'msgctxt "menu"',
+        'msgid "D"',
+        'msgstr "ޑ"',
+        "# translator comment",
+        'msgid "E"',
+        'msgid_plural "Es"',
+        'msgstr[0] "އެއް"',
+        'msgstr[1] "ގިނަ"',
+      ].join("\n"),
+      "po",
+    )
+
+    expect(messages).toEqual({ A: "އ", B: "ބ", "menu.D": "ޑ", E: "އެއް|ގިނަ" })
+  })
 })
 
 describe("XLIFF", () => {

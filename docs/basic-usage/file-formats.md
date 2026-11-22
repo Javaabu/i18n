@@ -34,7 +34,7 @@ Placeholders are always Laravel's `:name`. Apart from ARB, formats with other pl
 
 # Gettext
 
-Fuzzy and untranslated entries are skipped, as `msgfmt` does. An entry with `msgctxt` gets the key `context.msgid`.
+Fuzzy and untranslated entries are skipped, as `msgfmt` does. An entry with `msgctxt` gets the key `context.msgid`. Entries don't need blank lines between them. A file with an empty `Language:` header, such as a `.pot` template, has no locale of its own, so its lines go to the `locale` option or the current locale.
 
 # XLIFF
 
