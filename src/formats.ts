@@ -180,12 +180,22 @@ function parseXliff(text: string): ParsedFile {
 /** Java `.properties`. Dotted keys are groups, so they fall back like language files do. */
 function parseProperties(text: string): ParsedFile {
   const messages: Messages = {}
-  const lines = text.replace(/\\\r?\n[ \t]*/g, "").split(/\r?\n/)
+  const lines = text.split(/\r?\n/)
+  // An odd number of backslashes at the end continues the line; an even number is escaped backslashes.
+  const continues = (line: string) => (/\\+$/.exec(line)?.[0].length ?? 0) % 2 === 1
 
-  for (const raw of lines) {
-    const line = raw.replace(/^\s+/, "")
+  for (let index = 0; index < lines.length; index++) {
+    let line = (lines[index] as string).replace(/^[ \t\f]+/, "")
 
+    // Comments never continue onto the next line.
     if (line === "" || line.startsWith("#") || line.startsWith("!")) continue
+
+    while (continues(line)) {
+      line = line.slice(0, -1)
+      index++
+      if (index >= lines.length) break
+      line += (lines[index] as string).replace(/^[ \t\f]+/, "")
+    }
 
     const separator = /^((?:\\.|[^\\=:\s])+)\s*[=:\s]\s*/.exec(line)
     const rawKey = separator ? (separator[1] as string) : line

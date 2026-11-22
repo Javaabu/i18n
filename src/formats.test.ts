@@ -177,6 +177,28 @@ empty =
     expect(t.__("unicode")).toBe("ހ")
   })
 
+  it("doesn't continue a line that ends in an escaped backslash, or a comment", () => {
+    const t = load(
+      String.raw`path = C:\\ފޮލްޑަރު\\
+next = x
+# note \
+key = val
+odd = a\\\
+      b
+`,
+      { locale: "en" },
+    )
+
+    expect(t.__("path")).toBe("C:\\ފޮލްޑަރު\\")
+    expect(t.__("next")).toBe("x")
+    expect(t.__("key")).toBe("val")
+    expect(t.__("odd")).toBe("a\\b")
+  })
+
+  it("drops a continuation at the end of the file", () => {
+    expect(parseFile("last = ހ\\", "properties").messages).toEqual({ last: "ހ" })
+  })
+
   it("lets dotted keys fall back, since they're groups", () => {
     const t = new Translator({ locale: "dv", fallback: "en" })
 
