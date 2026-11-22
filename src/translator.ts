@@ -576,7 +576,7 @@ export class Translator {
       return
     }
 
-    const url = loader.replace("{locale}", encodeURIComponent(locale))
+    const url = loader.split("{locale}").join(encodeURIComponent(locale))
     const response = await fetch(url, { headers: { Accept: "application/json, text/plain, */*" } })
 
     if (!response.ok) {

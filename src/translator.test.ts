@@ -439,6 +439,16 @@ describe("loader", () => {
     errors.mockRestore()
   })
 
+  it("fills in every {locale} in a URL", async () => {
+    const fetchMock = vi.fn(() => Promise.resolve(new Response("{}", { status: 200 })))
+
+    vi.stubGlobal("fetch", fetchMock)
+
+    await new Translator({ locale: "dv", fallback: null, loader: "/lang/{locale}/{locale}.json" }).ready()
+
+    expect((fetchMock.mock.calls[0] as unknown[])[0]).toBe("/lang/dv/dv.json")
+  })
+
   it("can retry a locale after a failure", async () => {
     const errors = vi.spyOn(console, "error").mockImplementation(() => {})
     const loader = vi

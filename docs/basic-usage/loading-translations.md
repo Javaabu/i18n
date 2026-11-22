@@ -15,12 +15,13 @@ If the page has Laravel JS Localization's script, there's nothing to do. The sha
 
 # From a URL
 
-The format comes from the file extension. `{locale}` is filled in, and only the locales you use get fetched. A 404 for a locale just means its keys fall back.
+The format comes from the file extension. Every `{locale}` is filled in, and only the locales you use get fetched. A 404 for a locale just means its keys fall back.
 
 ```js
 configure({ loader: "/messages.json" }) // php artisan lang:js --json public/messages.json
 configure({ loader: "/lang/{locale}.json" })
 configure({ loader: "/lang/{locale}.po" })
+configure({ loader: "/lang/{locale}/{locale}.json" })
 ```
 
 # Bundled with your code
