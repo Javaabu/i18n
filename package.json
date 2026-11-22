@@ -1,6 +1,6 @@
 {
   "name": "@javaabu/i18n",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Laravel's __(), trans() and trans_choice() for JavaScript: same API and output, with locale detection from the page and loaders for Laravel JS Localization, JSON, gettext, XLIFF, properties and ARB files. Works with React, Vue, jQuery and vanilla JS.",
   "license": "MIT",
   "author": {
