@@ -1,49 +1,119 @@
 name: Release
 
-# Publishes to npm when a version tag (v0.1.0, …) is pushed for a commit on main. Version first, on a branch:
+# Releases to npm from main, driven by changesets:
 #
-#   pnpm changeset version
-#   git commit -am "Release v0.1.0" && merge into main
-#   git tag v0.1.0 <main commit> && git push origin v0.1.0
+# 1. Pull requests add a changeset (`pnpm changeset`).
+# 2. When they land on main, this workflow opens or updates a "Release" pull request that runs
+#    `changeset version`: it bumps package.json and writes CHANGELOG.md.
+# 3. Merging that pull request runs this workflow again with no changesets left. It sees that the
+#    version in package.json isn't on npm yet, checks and builds the package, publishes it, and tags
+#    and releases v<version> on GitHub.
 #
-# Uses npm trusted publishing, so no npm token is stored in the repo.
+# It publishes with npm trusted publishing, so no npm token is stored in the repo. Set it up on
+# npmjs.com under the package's settings: Trusted publisher, GitHub Actions, repository
+# Javaabu/i18n, workflow release.yml. npm only allows that once the package exists, so for the very
+# first publish add an automation token as the NPM_TOKEN secret, then delete it afterwards.
+#
+# Under Settings, Actions, General, "Allow GitHub Actions to create and approve pull requests" has
+# to be on for step 2.
 
 on:
   push:
-    tags: ["v*"]
+    branches: [main]
+  workflow_dispatch:
 
-concurrency: release
+concurrency:
+  group: release
+  cancel-in-progress: false
 
 permissions:
-  contents: read
-  id-token: write
+  contents: write # tags, GitHub releases and the release branch
+  pull-requests: write # the release pull request
+  id-token: write # npm trusted publishing and provenance
 
 jobs:
-  publish:
+  release:
+    name: Version or publish
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
         with:
           fetch-depth: 0
-      - name: Check the tag is on main and matches package.json
-        run: |
-          git fetch origin main
-          if ! git merge-base --is-ancestor "$GITHUB_SHA" origin/main; then
-            echo "::error::$GITHUB_REF_NAME points at a commit that is not on main."
-            exit 1
-          fi
-          version=$(node -p "require('./package.json').version")
-          if [ "${GITHUB_REF_NAME#v}" != "$version" ]; then
-            echo "::error::package.json is at $version, but the tag is $GITHUB_REF_NAME. Run pnpm changeset version first."
-            exit 1
-          fi
+
       - uses: pnpm/action-setup@v4
+
       - uses: actions/setup-node@v5
         with:
           node-version: 24 # ships npm 11, which trusted publishing needs
           cache: pnpm
           registry-url: https://registry.npmjs.org
+
       - run: pnpm install --frozen-lockfile
-      - run: pnpm build
-      - run: pnpm test:browser
-      - run: npm publish --access public
+
+      - name: Open or update the release pull request
+        id: changesets
+        uses: changesets/action@v1
+        with:
+          version: pnpm changeset version
+          title: Release
+          commit: Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Check whether this version is on npm
+        id: check
+        if: steps.changesets.outputs.hasChangesets == 'false'
+        run: |
+          name=$(node -p "require('./package.json').name")
+          version=$(node -p "require('./package.json').version")
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+          if [ "$version" = "0.0.0" ]; then
+            echo "Nothing to publish: package.json is still at 0.0.0."
+            echo "publish=false" >> "$GITHUB_OUTPUT"
+          elif npm view "$name@$version" version >/dev/null 2>&1; then
+            echo "$name@$version is already on npm."
+            echo "publish=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "Publishing $name@$version."
+            echo "publish=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Lint, typecheck and test
+        if: steps.check.outputs.publish == 'true'
+        run: |
+          pnpm lint
+          pnpm format:check
+          pnpm typecheck
+          pnpm test
+
+      - name: Build
+        if: steps.check.outputs.publish == 'true'
+        run: |
+          pnpm build
+          pnpm test:browser
+
+      - name: Publish to npm
+        if: steps.check.outputs.publish == 'true'
+        run: npm publish --provenance --access public
+        env:
+          # Only for the first publish, before trusted publishing can be set up. Empty otherwise.
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Tag and release on GitHub
+        if: steps.check.outputs.publish == 'true'
+        run: |
+          tag="v${{ steps.check.outputs.version }}"
+
+          # The changelog entry for this version: from its heading up to the next version's.
+          awk -v version="${{ steps.check.outputs.version }}" '
+            $0 == "## " version { found = 1; next }
+            found && /^## / { exit }
+            found { print }
+          ' CHANGELOG.md > "$RUNNER_TEMP/notes.md"
+
+          git tag "$tag" "$GITHUB_SHA"
+          git push origin "$tag"
+          gh release create "$tag" --title "$tag" --notes-file "$RUNNER_TEMP/notes.md" --verify-tag
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
