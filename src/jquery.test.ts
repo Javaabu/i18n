@@ -78,6 +78,24 @@ describe("translateDom", () => {
     expect(root.querySelector("#count")?.textContent).toBe("އެއް")
   })
 
+  it("reports a malformed data-trans-replace and carries on with the rest of the page", () => {
+    const errors = vi.spyOn(console, "error").mockImplementation(() => {})
+    const root = fixture(`
+      <p id="broken" data-trans="Hi :name" data-trans-replace='{"name":'></p>
+      <p id="string" data-trans="Hi :name" data-trans-replace='"އަލީ"'></p>
+      <p id="next" data-trans="Search"></p>
+    `)
+
+    translateDom(root, new Translator({ locale: "dv", messages }))
+
+    expect(root.querySelector("#broken")?.textContent).toBe("ހައި :name")
+    expect(root.querySelector("#string")?.textContent).toBe("ހައި :name")
+    expect(root.querySelector("#next")?.textContent).toBe("ހޯދާ")
+    expect(errors).toHaveBeenCalledTimes(2)
+
+    errors.mockRestore()
+  })
+
   it("never writes HTML", () => {
     const root = fixture(`<p data-trans="x"></p>`)
 

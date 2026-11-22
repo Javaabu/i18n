@@ -16,7 +16,7 @@ sidebar_position: 5
 | Java (`properties`)      | `messages.welcome = …`                                    | Dotted keys are groups                          |
 | Flutter (`arb`)          | `{ "@@locale": "dv", "hello": "Hi {name}" }`              | Reads `@@locale`; `{name}` becomes `:name`      |
 
-Without a `format` option, text is recognised from its content, and URLs from their extension.
+Without a `format` option, text is recognised from its content, and URLs from their extension. JSON is only read as ARB when it has `@@locale`, or an `@key` metadata object next to its `key`, so Laravel JSON files with keys like `@handle` stay JSON.
 
 # Saying which locale
 
@@ -38,7 +38,7 @@ Fuzzy and untranslated entries are skipped, as `msgfmt` does. An entry with `msg
 
 # XLIFF
 
-The key is the unit's `resname` or `name`, then its `id` unless that's just a number, then its source text. Inline tags such as `<g>` are removed, keeping their text. A unit with no target uses its source.
+The key is the unit's `resname` or `name`, then its `id` unless that's just a number, then its source text. Inline tags such as `<g>` are removed, keeping their text. A unit with no target uses its source. A character reference outside Unicode, such as `&#99999999;`, is kept as written.
 
 # Other formats
 

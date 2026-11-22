@@ -144,6 +144,15 @@ describe("XLIFF", () => {
     expect(t.__("untranslated")).toBe("Only source")
   })
 
+  it("leaves character references outside Unicode as they are", () => {
+    const { messages } = parseFile(
+      '<xliff><trans-unit id="a"><source>A</source><target>ހ &#99999999; &#x110000; &#x1F600;</target></trans-unit></xliff>',
+      "xliff",
+    )
+
+    expect(messages).toEqual({ a: "ހ &#99999999; &#x110000; 😀" })
+  })
+
   it("reads 2.x", () => {
     const t = load(`<xliff version="2.0" srcLang="en" trgLang="dv"><file id="f"><unit id="hello" name="greet.hello">
       <segment><source>Hello</source><target>ހެލޯ</target></segment></unit></file></xliff>`)
@@ -230,6 +239,17 @@ describe("format detection", () => {
     expect(parseFile('msgid "a"\nmsgstr "b"').messages).toEqual({ a: "b" })
     expect(parseFile('<xliff><trans-unit id="a"><source>b</source></trans-unit></xliff>').messages).toEqual({ a: "b" })
     expect(parseFile("a = b").messages).toEqual({ a: "b" })
+  })
+
+  it("only takes JSON for ARB when it has ARB's metadata", () => {
+    const laravel = '{"@handle": "ހޭންޑަލް", "Hi {x}": "ހައި {x}", "group": {"a": "b"}}'
+
+    expect(parseFile(laravel).messages).toEqual({ "@handle": "ހޭންޑަލް", "Hi {x}": "ހައި {x}", group: { a: "b" } })
+    expect(parseFile('{"hello": "Hi {name}", "@hello": {"description": "x"}}').messages).toEqual({ hello: "Hi :name" })
+    expect(parseFile('{"@hello": {"description": "x"}, "other": "y"}').messages).toEqual({
+      "@hello": { description: "x" },
+      other: "y",
+    })
   })
 
   it("reads file extensions", () => {

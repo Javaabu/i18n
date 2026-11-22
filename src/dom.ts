@@ -3,10 +3,28 @@ import type { Replacements } from "./types.js"
 
 const ATTRIBUTE_PREFIX = "data-trans-attr-"
 
+/** A malformed `data-trans-replace` is reported and ignored, so the rest of the page still gets translated. */
+function replacements(element: Element): Replacements {
+  const raw = element.getAttribute("data-trans-replace")
+
+  if (!raw) return {}
+
+  try {
+    const parsed: unknown = JSON.parse(raw)
+
+    if (typeof parsed === "object" && parsed !== null) return parsed as Replacements
+  } catch {
+    // Reported below.
+  }
+
+  console.error("[@javaabu/i18n] Ignoring data-trans-replace, which isn't a JSON object or array:", raw, element)
+
+  return {}
+}
+
 function translation(element: Element, key: string, translator: Translator): string | undefined {
-  const rawReplace = element.getAttribute("data-trans-replace")
   const rawCount = element.getAttribute("data-trans-count")
-  const replace = (rawReplace ? JSON.parse(rawReplace) : {}) as Replacements
+  const replace = replacements(element)
 
   if (rawCount !== null) return translator.choice(key, Number(rawCount), replace)
 

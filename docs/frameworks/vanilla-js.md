@@ -43,4 +43,4 @@ subscribe(() => translatePage())
 | `data-trans-replace` | Placeholder values, as JSON                  |
 | `data-trans-count`   | Uses `trans_choice()` with this number       |
 
-It sets text, never HTML, and keeps the attributes so it can run again after a locale change.
+It sets text, never HTML, and keeps the attributes so it can run again after a locale change. A `data-trans-replace` that isn't a JSON object or array is logged with `console.error` and ignored, and the rest of the page is still translated.

@@ -138,9 +138,13 @@ function decodeXml(text: string): string {
 
       return part
         .replace(/<[^>]+>/g, "")
-        .replace(/&(?:#(\d+)|#x([\da-f]+)|(lt|gt|amp|quot|apos));/gi, (_, dec, hex, name: string | undefined) => {
-          if (dec) return String.fromCodePoint(Number(dec))
-          if (hex) return String.fromCodePoint(parseInt(hex, 16))
+        .replace(/&(?:#(\d+)|#x([\da-f]+)|(lt|gt|amp|quot|apos));/gi, (match, dec, hex, name: string | undefined) => {
+          if (dec || hex) {
+            const codePoint = dec ? Number(dec) : parseInt(hex as string, 16)
+
+            // Out of Unicode's range, `fromCodePoint()` throws; the reference is left as written.
+            return codePoint <= 0x10ffff ? String.fromCodePoint(codePoint) : match
+          }
 
           return { lt: "<", gt: ">", amp: "&", quot: '"', apos: "'" }[(name as string).toLowerCase() as "lt"]
         })
@@ -235,10 +239,42 @@ export function formatFromPath(path: string): string | undefined {
   return extension && parsers.has(extension) ? extension : undefined
 }
 
+/** ARB has `@@locale`, or `@key` metadata objects next to their `key`. A JSON key that starts with `@` isn't enough. */
+function looksLikeArb(text: string): boolean {
+  let data: unknown
+
+  try {
+    data = JSON.parse(text)
+  } catch {
+    return false
+  }
+
+  if (typeof data !== "object" || data === null || Array.isArray(data)) return false
+
+  const has = (key: string) => Object.prototype.hasOwnProperty.call(data, key)
+  const record = data as Record<string, unknown>
+
+  return (
+    has("@@locale") ||
+    Object.keys(record).some((key) => {
+      const metadata = record[key]
+
+      return (
+        key.startsWith("@") &&
+        !key.startsWith("@@") &&
+        typeof metadata === "object" &&
+        metadata !== null &&
+        !Array.isArray(metadata) &&
+        has(key.slice(1))
+      )
+    })
+  )
+}
+
 function sniffFormat(text: string): string {
   const start = text.trimStart()
 
-  if (start.startsWith("{") || start.startsWith("[")) return /"@@?\w+"\s*:/.test(start) ? "arb" : "json"
+  if (start.startsWith("{") || start.startsWith("[")) return /"@/.test(start) && looksLikeArb(start) ? "arb" : "json"
   if (start.startsWith("<")) return "xliff"
   if (/^msgid\s+"/m.test(start)) return "po"
 
